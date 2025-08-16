@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="fa" dir="rtl"> 
+ <head> 
+  <meta charset="utf-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"> 
+  <title>سوپرمارکت آنلاین — دموی تک‌فایلی</title> 
+  <meta name="description" content="دموی سوپرمارکت آنلاین: جستجو، دسته‌بندی، سبد خرید، کدتخفیف، زمان‌بندی ارسال"> 
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin> 
+  <script src="https://cdn.tailwindcss.com"></script> 
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#00C853',
+            primaryDark: '#00A844',
+          }
+        }
+      },
+      corePlugins: {
+        preflight: true
+      }
+    }
+  </script> 
+  <style>
+    html, body { height: 100%; }
+    /* اسکرول برای سبد */
+    .scroll-area { scrollbar-width: thin; }
+    .scroll-area::-webkit-scrollbar { width: 8px; }
+    .scroll-area::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 8px; }
+  </style> 
+ </head> 
+ <body class="bg-gray-50 text-gray-900"> <!-- نوار بالا --> 
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b"> 
+   <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3"> <button id="openCartTop" class="md:hidden p-2 rounded-xl border hover:bg-gray-50" aria-label="سبد خرید"> 🛒 </button> <a href="#" class="flex items-center gap-2 font-bold text-lg"> <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-white">🛍️</span> <span>سوپرمارکت آنلاین</span> </a> 
+    <div class="ms-auto hidden md:flex items-center gap-3 w-[55%]"> 
+     <div class="relative flex-1"> 
+      <input id="search" class="w-full rounded-2xl border px-4 py-2 ps-10 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="جستجوی کالا (مثلاً شیر، نان، نوشابه...)"> <span class="absolute right-3 top-2.5">🔎</span> 
+     </div> <select id="city" class="rounded-2xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"> <option value="تهران">تهران</option> <option value="کرج">کرج</option> <option value="اصفهان">اصفهان</option> <option value="شیراز">شیراز</option> <option value="مشهد">مشهد</option> </select> <button id="loginBtn" class="rounded-2xl px-4 py-2 border hover:bg-gray-50">ورود / ثبت‌نام</button> 
+    </div> 
+   </div> 
+   <div class="md:hidden px-4 pb-3"> 
+    <div class="relative"> 
+     <input id="searchMobile" class="w-full rounded-2xl border px-4 py-2 ps-10 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="جستجوی کالا"> <span class="absolute right-3 top-2.5">🔎</span> 
+    </div> 
+    <div class="mt-2 flex items-center gap-2"> <select id="cityMobile" class="flex-1 rounded-2xl border px-3 py-2"> <option>تهران</option><option>کرج</option><option>اصفهان</option><option>شیراز</option><option>مشهد</option> </select> <button id="loginBtnMobile" class="rounded-2xl px-4 py-2 border">ورود</button> 
+    </div> 
+   </div> 
+  </header> <!-- بنر --> 
+  <section class="bg-gradient-to-l from-primary to-primaryDark text-white"> 
+   <div class="max-w-6xl mx-auto px-4 py-8 grid md:grid-cols-2 gap-6 items-center"> 
+    <div> 
+     <h1 class="text-2xl md:text-3xl font-bold leading-9">تحویل سریعِ اقلام روزمره درِ منزل</h1> 
+     <p class="mt-2 text-white/90">از میوه و لبنیات تا تنقلات و بهداشتی—همه در چند دقیقه داخل سبد شما.</p> 
+     <div class="mt-4 flex gap-2"> <button id="openSlots" class="rounded-2xl bg-white text-primary px-4 py-2 font-semibold hover:bg_white/90">انتخاب زمان ارسال</button> <a href="#products" class="rounded-2xl border border-white px-4 py-2 hover:bg-white/10">مشاهده محصولات</a> 
+     </div> 
+    </div> 
+    <div class="hidden md:block text-6xl text-center">
+     🛵💨
+    </div> 
+   </div> 
+  </section> <!-- دسته‌بندی‌ها --> 
+  <section class="max-w-6xl mx-auto px-4 py-6"> 
+   <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2" id="cats"> <!-- filled by JS --> 
+   </div> 
+  </section> <!-- محصولات --> 
+  <main id="products" class="max-w-6xl mx-auto px-4 pb-32"> 
+   <div id="grid" class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div> 
+  </main> <!-- سبد خرید کناری --> 
+  <aside id="cartDrawer" class="fixed inset-y-0 left-0 w-full max-w-md bg-white shadow-2xl translate-x-[-110%] transition-transform duration-300 z-50 flex flex-col"> 
+   <div class="p-4 border-b flex items-center gap-2"> <button id="closeCart" class="p-2 rounded-xl hover:bg-gray-50" aria-label="بستن">⬅️</button> 
+    <h2 class="font-bold text-lg">سبد خرید</h2> <span class="ms-auto text-sm text-gray-500" id="cartCity">شهر: تهران</span> 
+   </div> 
+   <div id="cartItems" class="flex-1 overflow-y-auto scroll-area p-4 space-y-3"></div> 
+   <div class="p-4 border-t space-y-3"> 
+    <div class="flex items-center gap-2"> 
+     <input id="coupon" class="flex-1 rounded-2xl border px-3 py-2" placeholder="کد تخفیف"> <button id="applyCoupon" class="rounded-2xl px-4 py-2 border">اعمال</button> 
+    </div> 
+    <div class="text-sm grid grid-cols-2 gap-y-1"> <span>جمع جز:</span><span class="text-left" id="subtotal">0</span> <span>تخفیف:</span><span class="text-left text-green-600" id="discount">0</span> <span>هزینه ارسال:</span><span class="text-left" id="shipping">15000</span> <span class="font-bold">مبلغ قابل پرداخت:</span><span class="text-left font-bold" id="payable">0</span> 
+    </div> <button id="checkout" class="w-full rounded-2xl bg-primary hover:bg-primaryDark text-white py-3 font-bold">ثبت سفارش</button> 
+   </div> 
+  </aside> <!-- نوار پایین موبایل --> 
+  <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t z-40"> 
+   <div class="max-w-6xl mx-auto px-4 py-2 grid grid-cols-4 text-center text-sm"> <a href="#" class="py-1">🏠
+     <div>
+      خانه
+     </div></a> <button id="openCartBottom" class="py-1">🛒
+     <div>
+      سبد
+     </div></button> <a href="#products" class="py-1">🧺
+     <div>
+      محصولات
+     </div></a> <button id="openSlots2" class="py-1">⏱️
+     <div>
+      زمان ارسال
+     </div></button> 
+   </div> 
+  </nav> <!-- مودال‌ها --> <dialog id="loginModal" class="rounded-2xl p-0 w-11/12 md:w-[420px]"> 
+   <form method="dialog" class="p-4 space-y-3"> 
+    <div class="flex items-center gap-2"> <span class="text-xl">👤</span> 
+     <h3 class="font-bold text-lg">ورود / ثبت‌نام</h3> <button class="ms-auto p-2 rounded-xl hover:bg-gray-50">✖️</button> 
+    </div> 
+    <input class="w-full rounded-2xl border px-3 py-2" placeholder="شماره موبایل"> <button class="w-full rounded-2xl bg-primary hover:bg-primaryDark text-white py-2">دریافت کد</button> 
+    <p class="text-xs text-gray-500">این فقط یک دمو است.</p> 
+   </form> 
+  </dialog> <dialog id="slotsModal" class="rounded-2xl p-0 w-11/12 md:w-[520px]"> 
+   <form method="dialog" class="p-4 space-y-3"> 
+    <div class="flex items-center gap-2"> <span class="text-xl">⏱️</span> 
+     <h3 class="font-bold text-lg">انتخاب بازهٔ ارسال</h3> <button class="ms-auto p-2 rounded-xl hover:bg-gray-50">✖️</button> 
+    </div> 
+    <div id="slotGrid" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div> <button class="w-full rounded-2xl bg-primary hover:bg-primaryDark text-white py-2">تأیید</button> 
+   </form> 
+  </dialog> <dialog id="orderDone" class="rounded-2xl p-0 w-11/12 md:w-[420px]"> 
+   <form method="dialog" class="p-4 space-y-3 text-center"> 
+    <div class="text-5xl">
+     ✅
+    </div> 
+    <h3 class="font-bold text-lg">سفارش ثبت شد</h3> 
+    <p class="text-sm text-gray-600">این یک پیش‌نمایش است و پرداخت واقعی انجام نمی‌شود.</p> <button class="w-full rounded-2xl border py-2">باشه</button> 
+   </form> 
+  </dialog> <button id="floatingCart" class="hidden md:flex fixed bottom-6 left-6 items-center gap-2 rounded-full shadow-lg bg-primary hover:bg-primaryDark text-white px-4 py-3 z-40"> <span>مشاهده سبد</span><span>🛒</span> </button> 
+  <script>
+    // داده‌های نمونه
+    const categories = [
+      { id: 'all', name: 'همه' },
+      { id: 'dairy', name: 'لبنیات' },
+      { id: 'bakery', name: 'نانوایی' },
+      { id: 'fruits', name: 'میوه و سبزی' },
+      { id: 'drinks', name: 'نوشیدنی' },
+      { id: 'snacks', name: 'تنقلات' },
+      { id: 'hygiene', name: 'بهداشت' },
+    ];
+
+    const products = [
+      {id:1, title:'شیر کم‌چرب ۱ لیتری', price:38000, cat:'dairy', unit:'بطری', emoji:'🥛'},
+      {id:2, title:'ماست یونانی ۹۰۰ گرمی', price:115000, cat:'dairy', unit:'عدد', emoji:'🥣'},
+      {id:3, title:'نان بربری تازه', price:18000, cat:'bakery', unit:'عدد', emoji:'🥖'},
+      {id:4, title:'نان تست سبوس‌دار', price:65000, cat:'bakery', unit:'بسته', emoji:'🍞'},
+      {id:5, title:'سیب قرمز ممتاز ۱ کیلو', price:98000, cat:'fruits', unit:'کیلو', emoji:'🍎'},
+      {id:6, title:'موز درجه یک ۱ کیلو', price:125000, cat:'fruits', unit:'کیلو', emoji:'🍌'},
+      {id:7, title:'نوشابه کولا ۱.۵ لیتری', price:42000, cat:'drinks', unit:'بطری', emoji:'🥤'},
+      {id:8, title:'دوغ سنتی خانواده', price:53000, cat:'drinks', unit:'بطری', emoji:'🧉'},
+      {id:9, title:'چیپس ساده ۶۰ گرمی', price:22000, cat:'snacks', unit:'بسته', emoji:'🍟'},
+      {id:10, title:'شکلات تخته‌ای ۷۰%', price:78000, cat:'snacks', unit:'تخته', emoji:'🍫'},
+      {id:11, title:'مایع دستشویی ۵۰۰ml', price:69000, cat:'hygiene', unit:'بطری', emoji:'🧴'},
+      {id:12, title:'دستمال کاغذی ۲۰۰ برگ', price:84000, cat:'hygiene', unit:'بسته', emoji:'🧻'},
+    ];
+
+    const coupons = {
+      'OFF20': 0.2,
+      'WELCOME10': 0.1,
+    };
+
+    const shippingBase = 15000;
+
+    // DOM refs
+    const grid = document.getElementById('grid');
+    const catWrap = document.getElementById('cats');
+    const search = document.getElementById('search');
+    const searchMobile = document.getElementById('searchMobile');
+    const city = document.getElementById('city');
+    const cityMobile = document.getElementById('cityMobile');
+
+    // سبد
+    const cartBtnTop = document.getElementById('openCartTop');
+    const cartBtnBottom = document.getElementById('openCartBottom');
+    const floatingCart = document.getElementById('floatingCart');
+    const cartDrawer = document.getElementById('cartDrawer');
+    const closeCart = document.getElementById('closeCart');
+    const cartItems = document.getElementById('cartItems');
+    const subtotalEl = document.getElementById('subtotal');
+    const discountEl = document.getElementById('discount');
+    const shippingEl = document.getElementById('shipping');
+    const payableEl = document.getElementById('payable');
+    const couponInput = document.getElementById('coupon');
+    const applyCouponBtn = document.getElementById('applyCoupon');
+    const cartCity = document.getElementById('cartCity');
+
+    // مودال‌ها
+    const loginBtn = document.getElementById('loginBtn');
+    const loginBtnMobile = document.getElementById('loginBtnMobile');
+    const loginModal = document.getElementById('loginModal');
+    const slotsModal = document.getElementById('slotsModal');
+    const openSlots = document.getElementById('openSlots');
+    const openSlots2 = document.getElementById('openSlots2');
+    const orderDone = document.getElementById('orderDone');
+    const slotGrid = document.getElementById('slotGrid');
+
+    // حالت برنامه
+    let state = {
+      cat: 'all',
+      q: '',
+      cart: {}, // id -> qty
+      coupon: null,
+      city: 'تهران',
+      slot: null,
+    };
+
+    // رندر دسته‌ها
+    function renderCats() {
+      catWrap.innerHTML = '';
+      categories.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'rounded-full border px-4 py-2 text-sm hover:bg-gray-50 ' + (state.cat===c.id? 'bg-gray-900 text-white border-gray-900':'');
+        btn.textContent = c.name;
+        btn.onclick = () => { state.cat = c.id; renderProducts(); };
+        catWrap.appendChild(btn);
+      });
+    }
+
+    // فیلتر محصولات
+    function filteredProducts() {
+      return products.filter(p => {
+        const byCat = state.cat==='all' || p.cat===state.cat;
+        const byQ = !state.q || p.title.includes(state.q);
+        return byCat && byQ;
+      });
+    }
+
+    // رندر محصولات
+    function renderProducts() {
+      const list = filteredProducts();
+      grid.innerHTML = '';
+      list.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'rounded-2xl bg-white border p-3 flex flex-col';
+        card.innerHTML = `
+          <div class="text-5xl text-center">${p.emoji}</div>
+          <div class="mt-3 font-bold">${p.title}</div>
+          <div class="text-sm text-gray-500">${p.unit}</div>
+          <div class="mt-2 font-bold">${p.price.toLocaleString('fa-IR')} تومان</div>
+          <div class="mt-auto pt-3">
+            <button class="w-full rounded-xl bg-primary hover:bg-primaryDark text-white py-2 addBtn">افزودن به سبد</button>
+          </div>`;
+        card.querySelector('.addBtn').onclick = () => addToCart(p.id, 1);
+        grid.appendChild(card);
+      });
+    }
+
+    // سبد خرید
+    function addToCart(id, qty=1){
+      state.cart[id] = (state.cart[id]||0) + qty;
+      if(state.cart[id] <= 0) delete state.cart[id];
+      renderCart();
+      openCart();
+    }
+
+    function cartLines(){
+      return Object.entries(state.cart).map(([id,qty])=>{
+        const p = products.find(x=>x.id==id);
+        const lineTotal = p.price * qty;
+        return {id:+id, p, qty, lineTotal};
+      });
+    }
+
+    function totals(){
+      const lines = cartLines();
+      const subtotal = lines.reduce((s,l)=>s+l.lineTotal,0);
+      const discount = state.coupon ? Math.floor(subtotal * state.coupon) : 0;
+      const shipping = subtotal>0 ? shippingBase : 0;
+      const payable = Math.max(0, subtotal - discount + shipping);
+      return {subtotal, discount, shipping, payable};
+    }
+
+    function renderCart(){
+      const lines = cartLines();
+      cartItems.innerHTML = '';
+      if(lines.length===0){
+        cartItems.innerHTML = '<div class="text-center text-gray-500 py-10">سبد شما خالی است.</div>';
+      }
+      lines.forEach(({id, p, qty, lineTotal})=>{
+        const row = document.createElement('div');
+        row.className = 'border rounded-2xl p-3 flex items-center gap-3';
+        row.innerHTML = `
+          <div class="text-3xl">${p.emoji}</div>
+          <div class="flex-1">
+            <div class="font-semibold">${p.title}</div>
+            <div class="text-sm text-gray-500">${p.unit}</div>
+            <div class="mt-1 text-sm">${(p.price).toLocaleString('fa-IR')} × ${qty} = <b>${lineTotal.toLocaleString('fa-IR')}</b> تومان</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-1 rounded-full border" aria-label="کم کردن">−</button>
+            <span class="w-6 text-center">${qty}</span>
+            <button class="px-3 py-1 rounded-full border" aria-label="زیاد کردن">+</button>
+          </div>`;
+        const [minusBtn, , plusBtn] = row.querySelectorAll('button');
+        minusBtn.onclick = ()=>{ addToCart(id, -1); };
+        plusBtn.onclick = ()=>{ addToCart(id, +1); };
+        cartItems.appendChild(row);
+      });
+
+      const t = totals();
+      subtotalEl.textContent = t.subtotal.toLocaleString('fa-IR') + ' تومان';
+      discountEl.textContent = t.discount.toLocaleString('fa-IR') + ' تومان';
+      shippingEl.textContent = t.shipping.toLocaleString('fa-IR') + ' تومان';
+      payableEl.textContent = t.payable.toLocaleString('fa-IR') + ' تومان';
+      floatingCart.classList.toggle('hidden', lines.length===0);
+    }
+
+    function openCart(){ cartDrawer.style.transform = 'translateX(0)'; }
+    function closeCartDrawer(){ cartDrawer.style.transform = 'translateX(-110%)'; }
+
+    // کوپن
+    applyCouponBtn.onclick = () => {
+      const code = (couponInput.value||'').toUpperCase().trim();
+      if(coupons[code]){ state.coupon = coupons[code]; alert('کد تخفیف اعمال شد'); }
+      else { state.coupon = null; alert('کد معتبر نیست'); }
+      renderCart();
+    };
+
+    // جستجو
+    function bindSearch(inp){
+      if(!inp) return;
+      inp.addEventListener('input', (e)=>{ state.q = e.target.value.trim(); renderProducts(); });
+    }
+
+    // شهر
+    function bindCity(sel){
+      if(!sel) return;
+      sel.addEventListener('change', (e)=>{
+        state.city = e.target.value;
+        cartCity.textContent = 'شهر: ' + state.city;
+      });
+    }
+
+    // اسلات‌ها
+    function renderSlots(){
+      slotGrid.innerHTML = '';
+      const today = new Date();
+      const days = [...Array(5)].map((_,i)=>{
+        const d = new Date(today); d.setDate(d.getDate()+i);
+        return d;
+      });
+      const slots = ['۹-۱۱','۱۱-۱۳','۱۳-۱۵','۱۵-۱۷','۱۷-۱۹','۱۹-۲۱'];
+      days.forEach(d=>{
+        slots.forEach(s=>{
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'rounded-xl border px-3 py-2 hover:bg-gray-50 text-sm';
+          const label = d.toLocaleDateString('fa-IR') + ' | ' + s;
+          btn.textContent = label;
+          btn.onclick = ()=>{
+            state.slot = label;
+            [...slotGrid.children].forEach(x=>x.classList.remove('bg-gray-900','text-white','border-gray-900'));
+            btn.classList.add('bg-gray-900','text-white','border-gray-900');
+          };
+          slotGrid.appendChild(btn);
+        });
+      });
+    }
+
+    // رویدادها
+    cartBtnTop && (cartBtnTop.onclick = openCart);
+    cartBtnBottom && (cartBtnBottom.onclick = openCart);
+    floatingCart && (floatingCart.onclick = openCart);
+    closeCart && (closeCart.onclick = closeCartDrawer);
+
+    loginBtn && (loginBtn.onclick = ()=>loginModal.showModal());
+    loginBtnMobile && (loginBtnMobile.onclick = ()=>loginModal.showModal());
+
+    openSlots && (openSlots.onclick = ()=>{ renderSlots(); slotsModal.showModal(); });
+    openSlots2 && (openSlots2.onclick = ()=>{ renderSlots(); slotsModal.showModal(); });
+
+    document.getElementById('checkout').onclick = ()=>{
+      if(Object.keys(state.cart).length===0){ alert('سبد شما خالی است'); return; }
+      orderDone.showModal();
+      // ریست دمو
+      state.cart = {}; state.coupon=null; renderCart(); closeCartDrawer();
+    };
+
+    // مقداردهی اولیه
+    renderCats();
+    renderProducts();
+    renderCart();
+    bindSearch(search); bindSearch(searchMobile);
+    bindCity(city); bindCity(cityMobile);
+    cartCity.textContent = 'شهر: ' + state.city;
+  </script> 
+ </body>
+</html>
